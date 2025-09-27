@@ -10,7 +10,15 @@ from dotenv import load_dotenv
 from agno.agent import Agent
 from agno.models.groq import Groq
 from agno.tools.duckduckgo import DuckDuckGoTools
-from agno.tools.url import UrlTools
+from agno.tools.url_toolkit import UrlToolkit   # <-- NEW import
+
+# ---------- agent ----------
+agent = Agent(
+    model=Groq(id="llama-3.1-70b-versatile", api_key=GROQ_KEY),
+    tools=[DuckDuckGoTools(), UrlToolkit()] if cfg.get("enable_tools", True) else [],
+    description="Helpful self-bot. Keep answers ≤300 chars.",
+    show_tool_calls=False
+)
 
 # ---------- SquidDrill ----------
 from utils.config import cfg
@@ -21,13 +29,6 @@ load_dotenv()
 TOKEN    = os.getenv("DISCORD_TOKEN")
 GROQ_KEY = os.getenv("GROQ_API_KEY")
 
-# ---------- agent (memory=ON by default) ----------
-agent = Agent(
-    model=Groq(id="llama-3.1-70b-versatile", api_key=GROQ_KEY),
-    tools=[DuckDuckGoTools(), UrlTools()] if cfg.get("enable_tools", True) else [],
-    description="Helpful self-bot. Keep answers ≤300 chars.",
-    show_tool_calls=False
-)
 
 # ---------- Discord ----------
 intents = discord.Intents.default()
