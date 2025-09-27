@@ -27,18 +27,17 @@ async def on_message(msg):
     if msg.author == bot.user:
         return
 
-    # ----- .tldr N -----
+        # ----- .tldr X  (0–1000) -----
     if msg.content.startswith(".tldr"):
         parts = msg.content.split()
         limit = int(parts[1]) if len(parts) > 1 and parts[1].isdigit() else 20
-        limit = min(limit, 100)
+        limit = max(0, min(limit, 1000))          # clamp 0–1000
         async with msg.channel.typing():
             msgs = [m async for m in msg.channel.history(limit=limit)]
             corpus = "\n".join(m.content for m in reversed(msgs) if m.content)
-            summary = agent.run(f"Summarise this chat in one sentence:\n{corpus}", stream=False)
-        await msg.reply(summary.content[:300])
+            summary = tldr(corpus or "empty")
+        await msg.reply(summary[:300])
         return
-
     # ----- DM / mention -----
     if isinstance(msg.channel, discord.DMChannel) or bot.user.mentioned_in(msg):
         async with msg.channel.typing():
