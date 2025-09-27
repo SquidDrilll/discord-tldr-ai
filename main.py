@@ -51,4 +51,4 @@ async def on_message(msg):
         await msg.reply(summary.content[:300])
 
 if __name__ == "__main__":
-    bot.run(TOKEN, bot=False)
+    bot.run(TOKEN)          # <- NO bot=False
