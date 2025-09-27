@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-Railway-ready TL;DR self-bot – minimal, tested 2024-06-14
+Railway-ready TL;DR self-bot – no Intents, no broken imports
 """
-import os, discord, textwrap
+import os, discord
 from dotenv import load_dotenv
 from agno.agent import Agent
 from agno.models.groq import Groq
@@ -16,9 +16,8 @@ agent = Agent(
     description="Reply with a one-sentence TL;DR of the user's text."
 )
 
-intents = discord.Intents.default()
-intents.message_content = True
-bot = discord.Client(intents=intents, self_bot=True)
+# ---------- NO INTENTS ----------
+bot = discord.Client(self_bot=True)
 
 @bot.event
 async def on_ready():
@@ -29,20 +28,20 @@ async def on_message(msg):
     if msg.author == bot.user:
         return
 
-    # 1. DM -> direct TL;DR
+    # 1. DM -> TL;DR
     if isinstance(msg.channel, discord.DMChannel):
         async with msg.channel.typing():
             summary = agent.run(msg.content, stream=False)
         await msg.reply(summary.content[:300])
 
-    # 2. Mention -> TL;DR of the message
+    # 2. Mention -> TL;DR
     elif bot.user.mentioned_in(msg):
         async with msg.channel.typing():
             text = msg.content.replace(f"<@{bot.user.id}>", "").strip()
             summary = agent.run(text or msg.content, stream=False)
         await msg.reply(summary.content[:300])
 
-    # 3. Channel command "tldr" -> TL;DR last 20 messages
+    # 3. Channel command "tldr" -> TL;DR last 20 msgs
     elif msg.content.lower().strip() == "tldr":
         async with msg.channel.typing():
             msgs = [m async for m in msg.channel.history(limit=20)]
