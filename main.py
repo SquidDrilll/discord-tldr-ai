@@ -1,12 +1,11 @@
 #!/usr/bin/env python3
 """
-Railway-ready TL;DR self-bot – discord.py-self-reborn (no crash)
+Railway-ready TL;DR self-bot – discord.py-self-reborn, no search tool, no crashes
 """
 import os, discord
 from dotenv import load_dotenv
 from agno.agent import Agent
 from agno.models.groq import Groq
-from agno.tools.duckduckgo import DuckDuckGoTools
 
 load_dotenv()
 TOKEN    = os.getenv("DISCORD_TOKEN")
@@ -14,7 +13,6 @@ GROQ_KEY = os.getenv("GROQ_API_KEY")
 
 agent = Agent(
     model=Groq(id="llama-3.1-8b-instant", api_key=GROQ_KEY),
-    tools=[DuckDuckGoTools()],
     description="Reply with a one-sentence TL;DR."
 )
 
