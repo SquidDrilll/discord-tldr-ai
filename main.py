@@ -6,8 +6,12 @@ load_dotenv()
 TOKEN   = os.getenv("DISCORD_TOKEN")
 API_KEY = os.getenv("GROQ_API_KEY")
 
-URL = "https://api.groq.com/openai/v1/chat/completions"
-HEAD = {"Authorization": f"Bearer {API_KEY}", "Content-Type": "application/json"}
+URL   = "https://api.groq.com/openai/v1/chat/completions"
+HEAD  = {"Authorization": f"Bearer {API_KEY}", "Content-Type": "application/json"}
+
+bot = discord.Client(self_bot=True)
+# ---- gateway crash fix ----
+discord.state.Payment = type('Payment', (), {'__init__': lambda *a, **k: None})
 
 async def tldr(text: str) -> str:
     payload = {
@@ -21,8 +25,6 @@ async def tldr(text: str) -> str:
             r.raise_for_status()
             data = await r.json()
             return data["choices"][0]["message"]["content"].strip()
-
-bot = discord.Client(self_bot=True)
 
 @bot.event
 async def on_ready():
