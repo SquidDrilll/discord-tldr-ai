@@ -1,15 +1,13 @@
 #!/usr/bin/env python3
-import os, discord, asyncio
+import os, discord
 from dotenv import load_dotenv
-import openai  # we’ll use OpenAI-compatible Groq endpoint
+from groq import Groq
 
 load_dotenv()
 TOKEN   = os.getenv("DISCORD_TOKEN")
 API_KEY = os.getenv("GROQ_API_KEY")
 
-client = openai.OpenAI(base_url="https://api.groq.com/openai/v1", api_key=API_KEY)
-
-bot = discord.Client(self_bot=True)
+client = Groq(api_key=API_KEY)
 
 def tldr(text: str) -> str:
     resp = client.chat.completions.create(
@@ -20,6 +18,8 @@ def tldr(text: str) -> str:
     )
     return resp.choices[0].message.content.strip()
 
+bot = discord.Client(self_bot=True)
+
 @bot.event
 async def on_ready():
     print(f"[+] TL;DR bot ready: {bot.user}")
@@ -29,18 +29,19 @@ async def on_message(msg):
     if msg.author == bot.user:
         return
 
-        # ----- .tldr X  (0–1000) -----
+    # ----- .tldr X (0–1000) -----
     if msg.content.startswith(".tldr"):
         parts = msg.content.split()
         limit = int(parts[1]) if len(parts) > 1 and parts[1].isdigit() else 20
-        limit = max(0, min(limit, 1000))          # clamp 0–1000
+        limit = max(0, min(limit, 1000))
         async with msg.channel.typing():
             msgs = [m async for m in msg.channel.history(limit=limit)]
             corpus = "\n".join(m.content for m in reversed(msgs) if m.content)
             summary = tldr(corpus or "empty")
         await msg.reply(summary[:300])
         return
-    # DM / mention
+
+    # ----- DM / mention -----
     if isinstance(msg.channel, discord.DMChannel) or bot.user.mentioned_in(msg):
         async with msg.channel.typing():
             text = msg.content.replace(f"<@{bot.user.id}>", "").strip()
