@@ -1,22 +1,24 @@
 #!/usr/bin/env python3
-"""
-Railway-ready TL;DR self-bot – discord.py-self-reborn, no search tool, no crashes
-"""
-import os, discord
+import os, discord, asyncio
 from dotenv import load_dotenv
-from agno.agent import Agent
-from agno.models.groq import Groq
+import openai  # we’ll use OpenAI-compatible Groq endpoint
 
 load_dotenv()
-TOKEN    = os.getenv("DISCORD_TOKEN")
-GROQ_KEY = os.getenv("GROQ_API_KEY")
+TOKEN   = os.getenv("DISCORD_TOKEN")
+API_KEY = os.getenv("GROQ_API_KEY")
 
-agent = Agent(
-    model=Groq(id="llama-3.1-8b-instant", api_key=GROQ_KEY),
-    description="Reply with a one-sentence TL;DR."
-)
+client = openai.OpenAI(base_url="https://api.groq.com/openai/v1", api_key=API_KEY)
 
 bot = discord.Client(self_bot=True)
+
+def tldr(text: str) -> str:
+    resp = client.chat.completions.create(
+        model="llama-3.1-8b-instant",
+        messages=[{"role": "user", "content": f"TL;DR in one sentence:\n{text}"}],
+        max_tokens=60,
+        temperature=0.3
+    )
+    return resp.choices[0].message.content.strip()
 
 @bot.event
 async def on_ready():
@@ -38,12 +40,12 @@ async def on_message(msg):
             summary = tldr(corpus or "empty")
         await msg.reply(summary[:300])
         return
-    # ----- DM / mention -----
+    # DM / mention
     if isinstance(msg.channel, discord.DMChannel) or bot.user.mentioned_in(msg):
         async with msg.channel.typing():
             text = msg.content.replace(f"<@{bot.user.id}>", "").strip()
-            summary = agent.run(text or msg.content, stream=False)
-        await msg.reply(summary.content[:300])
+            summary = tldr(text or msg.content)
+        await msg.reply(summary[:300])
 
 if __name__ == "__main__":
     bot.run(TOKEN)
