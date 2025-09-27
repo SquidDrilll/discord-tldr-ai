@@ -1,4 +1,3 @@
-
 #!/usr/bin/env python3
 import os, discord, aiohttp, json
 from dotenv import load_dotenv
